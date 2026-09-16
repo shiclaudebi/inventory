@@ -324,6 +324,12 @@
   table.opndet{table-layout:fixed; width:100%; font-size:10.5px}
   table.opndet th, table.opndet td{padding:6px 5px; white-space:normal; overflow-wrap:anywhere; word-break:break-word; text-align:left; vertical-align:top}
   table.opndet td.num, table.opndet th.num{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums}
+  table.opndet td:nth-child(2), table.opndet td:nth-child(6){white-space:nowrap}   /* Category & Aging — keep on one line */
+  /* faded tints: System columns (Qty Sys / Amt Sys) blue, Actual columns (Qty Act / Amt Act) green */
+  table.opndet td:nth-child(7), table.opndet td:nth-child(11){background:rgba(47,107,204,.08)}
+  table.opndet td:nth-child(8), table.opndet td:nth-child(12){background:rgba(23,160,90,.10)}
+  table.opndet td.amt2{line-height:1.15}
+  table.opndet td.amt2 .usdsub{text-align:right}
   table.opndet th.num{text-align:right}
   /* faded arrow tooltip (hover a table cell to see its note) */
   .tipc{position:relative}
@@ -362,7 +368,7 @@
     <div class="bar2-right">
       <button class="toggle" id="langBtn"><span class="id">English</span><span class="en">한국어</span></button>
       <span class="rate">
-        <span class="id">환율</span><span class="en">Rate</span> <b>USD 1 = IDR <span id="rateVal" contenteditable="true" spellcheck="false" title="klik untuk ubah kurs">18.031</span></b> · <span class="id">Rp 기준</span><span class="en">IDR base</span>
+        <span class="id">환율</span><span class="en">Rate</span> <b>USD 1 = IDR <span id="rateVal" contenteditable="true" spellcheck="false" title="klik untuk ubah kurs">18.031</span></b>
       </span>
     </div>
   </div>
@@ -879,6 +885,7 @@ const usd = n => 'USD '+Math.round(n/RATE/1000)+'K';
 function usdBig(n){ const u=n/RATE; if(u>=1e6) return 'USD '+(u/1e6).toFixed(2)+'M'; if(u>=1e4) return 'USD '+Math.round(u/1000)+'K'; return 'USD '+(u/1000).toFixed(1)+'K'; }
 /* small USD sub-line under an IDR amount; '' for zero/dash */
 function usdSub(n){ return n?`<div class="usdsub">${usdBig(Math.abs(n))}</div>`:''; }
+function usdMini(n){ return n?`<div class="usdsub">${usdItem(Math.abs(n))}</div>`:''; }
 function usdItem(n){ const u=n/RATE; if(u>=100) return 'USD '+Math.round(u).toLocaleString('en-US'); if(u>=1) return 'USD '+u.toFixed(2); return 'USD '+u.toFixed(2); }
 const pct = (a,b)=> (100*a/b).toFixed(1)+'%';
 
@@ -1862,6 +1869,14 @@ function toggleOpn(id,el){
   const show=box.style.display==='none'; box.style.display=show?'':'none';
   const tw=el&&el.querySelector('.tw'); if(tw) tw.textContent = show?'▾':'▸';
 }
+function locCell2(loc){
+  if(!loc) return '—';
+  const p=String(loc).split(/\s*·\s*/);
+  const floor=p.shift()||'';
+  const rest=p.join(' · ');
+  return `<span style="display:block;font-weight:700;color:var(--ink)">${floor}</span>`+
+    (rest?`<span style="display:block;color:var(--muted);font-size:10px">${rest}</span>`:'');
+}
 function opnDetailRows(items){
   const col=n=>n<0?'var(--red)':n>0?'var(--blue)':'var(--muted)';
   return items.map((it,i)=>`<tr>
@@ -1869,23 +1884,23 @@ function opnDetailRows(items){
     <td>${it.cat||''}</td>
     <td>${it.new||it.old||'—'}</td>
     <td>${it.desc||''}</td>
-    <td class="muted">${it.loc||'—'}</td>
+    <td>${locCell2(it.loc)}</td>
     <td class="muted">${it.aging||''}</td>
     <td class="num">${nf(it.qs)}</td>
     <td class="num">${it.qa!==undefined&&it.qa!==null?nf(it.qa):'—'}</td>
     <td class="num" style="font-weight:600;color:${col(it.dq)}">${it.dq>0?'+':''}${nf(it.dq)}</td>
-    <td class="num">${nf(it['as'])}</td>
-    <td class="num">${nf(it.aa)}</td>
-    <td class="num" style="font-weight:700;color:${col(it.da)}">${it.da>0?'+':''}${nf(it.da)}</td>
-    <td class="muted">${it.rm||''}</td>
+    <td class="num amt2">${(()=>{const p=it.qs?Math.round(it['as']/it.qs):0;return p?'Rp '+nf(p)+usdMini(p):'—';})()}</td>
+    <td class="num amt2">${nf(it['as'])}${usdMini(it['as'])}</td>
+    <td class="num amt2">${nf(it.aa)}${usdMini(it.aa)}</td>
+    <td class="num amt2" style="font-weight:700;color:${col(it.da)}">${it.da>0?'+':''}${nf(it.da)}${usdMini(it.da)}</td>
   </tr>`).join('');
 }
 function opnDetailBlock(id,koTtl,enTtl,items,amt,note){
   const L=isEN();
   const cg=`<colgroup>
-    <col style="width:3%"><col style="width:6%"><col style="width:9%"><col style="width:17%">
-    <col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:6%">
-    <col style="width:5%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:7%"></colgroup>`;
+    <col style="width:3%"><col style="width:8%"><col style="width:9%"><col style="width:15%">
+    <col style="width:9%"><col style="width:8%"><col style="width:5%"><col style="width:5%">
+    <col style="width:4%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"></colgroup>`;
   const head=`<tr>
     <th>No</th><th><span class="id">구분</span><span class="en">Category</span></th>
     <th><span class="id">코드</span><span class="en">Code</span></th>
@@ -1895,10 +1910,10 @@ function opnDetailBlock(id,koTtl,enTtl,items,amt,note){
     <th class="num"><span class="id">Qty 시스템</span><span class="en">Qty Sys</span></th>
     <th class="num"><span class="id">Qty 실물</span><span class="en">Qty Act</span></th>
     <th class="num"><span class="id">차이</span><span class="en">Diff</span></th>
+    <th class="num"><span class="id">단가</span><span class="en">Price</span></th>
     <th class="num"><span class="id">금액 시스템</span><span class="en">Amt Sys</span></th>
     <th class="num"><span class="id">금액 실물</span><span class="en">Amt Act</span></th>
-    <th class="num"><span class="id">차이(IDR)</span><span class="en">Diff (IDR)</span></th>
-    <th>Remark</th></tr>`;
+    <th class="num"><span class="id">차이(Rp)</span><span class="en">Diff (Rp)</span></th></tr>`;
   return `<div class="subttl opn8-tog" style="margin-top:16px;cursor:pointer;user-select:none" onclick="toggleOpn('${id}',this)">
       <span class="tw" style="color:var(--blue);font-weight:700">▸</span>
       <span class="id">${koTtl}</span><span class="en">${enTtl}</span>
