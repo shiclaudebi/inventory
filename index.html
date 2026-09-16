@@ -320,6 +320,11 @@
   /* compact report table (fits one screen without scrolling) */
   table.rpt td, table.rpt th{padding:5px 12px}
   table.rpt td{font-size:12.5px}
+  /* opname detail-by-category table: fit width, no horizontal scroll */
+  table.opndet{table-layout:fixed; width:100%; font-size:10.5px}
+  table.opndet th, table.opndet td{padding:6px 5px; white-space:normal; overflow-wrap:anywhere; word-break:break-word; text-align:left; vertical-align:top}
+  table.opndet td.num, table.opndet th.num{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums}
+  table.opndet th.num{text-align:right}
   /* faded arrow tooltip (hover a table cell to see its note) */
   .tipc{position:relative}
   .tipc[data-tip]:hover{cursor:help}
@@ -718,10 +723,6 @@
       <span class="id">재고실사 결과 — <span class="opn8-per"></span></span>
       <span class="en">Stock Opname Results — <span class="opn8-per"></span></span>
     </div>
-    <div class="secdesc">
-      <span class="id">재고실사(Stock Opname) 결과 요약 및 카테고리별 상세 (System vs Actual). 금액은 IDR 기준, USD 병기.</span>
-      <span class="en">Stock-opname results: summary + per-category detail (System vs Actual). Amounts in IDR, USD alongside.</span>
-    </div>
 
     <!-- KPI number boxes (moved to top) -->
     <div class="kpis4" id="opn8-kpis" style="margin-bottom:16px"></div>
@@ -729,9 +730,6 @@
     <!-- EMAIL REPORT SUMMARY (Aug) — matches management email -->
     <div class="subttl" style="margin-bottom:6px"><span class="sq"></span>
       <span class="id">경영 보고 요약 — 8월 재고조사 결과</span><span class="en">Management report summary — August stock count</span></div>
-    <div class="secdesc" style="margin:-2px 0 10px">
-      <span class="id">8월 재고조사 결과 주요 확인사항 (경영진 보고 기준).</span>
-      <span class="en">Key points from the August stock count (as reported to management).</span></div>
     <div class="card" style="margin-bottom:18px"><div class="pad">
       <table class="navyhead" style="font-size:12.5px">
         <thead><tr>
@@ -1868,34 +1866,38 @@ function opnDetailRows(items){
   const col=n=>n<0?'var(--red)':n>0?'var(--blue)':'var(--muted)';
   return items.map((it,i)=>`<tr>
     <td class="muted">${i+1}</td>
-    <td style="white-space:nowrap">${it.cat||''}</td>
-    <td style="white-space:nowrap">${it.new||it.old||'—'}</td>
-    <td style="white-space:normal;min-width:210px">${it.desc||''}</td>
-    <td class="muted" style="white-space:nowrap">${it.loc||'—'}</td>
-    <td class="muted" style="white-space:nowrap">${it.aging||''}</td>
-    <td style="text-align:right">${nf(it.qs)}</td>
-    <td style="text-align:right">${it.qa!==undefined&&it.qa!==null?nf(it.qa):'—'}</td>
-    <td style="text-align:right;font-weight:600;color:${col(it.dq)}">${it.dq>0?'+':''}${nf(it.dq)}</td>
-    <td style="text-align:right">${nf(it['as'])}</td>
-    <td style="text-align:right">${nf(it.aa)}</td>
-    <td style="text-align:right;font-weight:700;color:${col(it.da)}">${it.da>0?'+':''}${nf(it.da)}</td>
-    <td class="muted" style="white-space:normal;min-width:150px;font-size:11px">${it.rm||''}</td>
+    <td>${it.cat||''}</td>
+    <td>${it.new||it.old||'—'}</td>
+    <td>${it.desc||''}</td>
+    <td class="muted">${it.loc||'—'}</td>
+    <td class="muted">${it.aging||''}</td>
+    <td class="num">${nf(it.qs)}</td>
+    <td class="num">${it.qa!==undefined&&it.qa!==null?nf(it.qa):'—'}</td>
+    <td class="num" style="font-weight:600;color:${col(it.dq)}">${it.dq>0?'+':''}${nf(it.dq)}</td>
+    <td class="num">${nf(it['as'])}</td>
+    <td class="num">${nf(it.aa)}</td>
+    <td class="num" style="font-weight:700;color:${col(it.da)}">${it.da>0?'+':''}${nf(it.da)}</td>
+    <td class="muted">${it.rm||''}</td>
   </tr>`).join('');
 }
 function opnDetailBlock(id,koTtl,enTtl,items,amt,note){
   const L=isEN();
+  const cg=`<colgroup>
+    <col style="width:3%"><col style="width:6%"><col style="width:9%"><col style="width:17%">
+    <col style="width:10%"><col style="width:7%"><col style="width:6%"><col style="width:6%">
+    <col style="width:5%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:7%"></colgroup>`;
   const head=`<tr>
     <th>No</th><th><span class="id">구분</span><span class="en">Category</span></th>
     <th><span class="id">코드</span><span class="en">Code</span></th>
     <th><span class="id">품목</span><span class="en">Description</span></th>
     <th><span class="id">위치</span><span class="en">Location</span></th>
     <th>Aging</th>
-    <th><span class="id">Qty 시스템</span><span class="en">Qty Sys</span></th>
-    <th><span class="id">Qty 실물</span><span class="en">Qty Act</span></th>
-    <th><span class="id">차이</span><span class="en">Diff</span></th>
-    <th><span class="id">금액 시스템</span><span class="en">Amt Sys</span></th>
-    <th><span class="id">금액 실물</span><span class="en">Amt Act</span></th>
-    <th><span class="id">차이(IDR)</span><span class="en">Diff (IDR)</span></th>
+    <th class="num"><span class="id">Qty 시스템</span><span class="en">Qty Sys</span></th>
+    <th class="num"><span class="id">Qty 실물</span><span class="en">Qty Act</span></th>
+    <th class="num"><span class="id">차이</span><span class="en">Diff</span></th>
+    <th class="num"><span class="id">금액 시스템</span><span class="en">Amt Sys</span></th>
+    <th class="num"><span class="id">금액 실물</span><span class="en">Amt Act</span></th>
+    <th class="num"><span class="id">차이(IDR)</span><span class="en">Diff (IDR)</span></th>
     <th>Remark</th></tr>`;
   return `<div class="subttl opn8-tog" style="margin-top:16px;cursor:pointer;user-select:none" onclick="toggleOpn('${id}',this)">
       <span class="tw" style="color:var(--blue);font-weight:700">▸</span>
@@ -1904,8 +1906,8 @@ function opnDetailBlock(id,koTtl,enTtl,items,amt,note){
     </div>
     <div id="${id}" style="display:none"><div class="card"><div class="pad">
       ${note?`<div class="muted" style="font-size:11.5px;margin-bottom:8px">${note}</div>`:''}
-      <div class="scroll" style="max-height:460px"><table class="navyhead" style="font-size:12px">
-        <thead>${head}</thead><tbody>${opnDetailRows(items)}</tbody></table></div>
+      <div class="scroll" style="max-height:460px; overflow-x:hidden"><table class="navyhead opndet">
+        ${cg}<thead>${head}</thead><tbody>${opnDetailRows(items)}</tbody></table></div>
     </div></div></div>`;
 }
 function renderOPN(){
