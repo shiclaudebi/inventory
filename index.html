@@ -412,10 +412,12 @@
   /* small note shown under the main figure in comparison-table cells */
   .celltip{font-size:10px;font-weight:400;color:var(--muted);margin-top:3px;line-height:1.25;white-space:normal}
   /* comparison table fits the card width — no left/right scroll */
-  #trendTable{table-layout:fixed; width:100%; font-size:11px}
-  #trendTable th, #trendTable td{padding:7px 7px}
-  #trendTable th:first-child, #trendTable td:first-child{width:58px}
-  #trendTable .usdsub{white-space:normal}
+  #trendTable{table-layout:fixed; width:100%; font-size:11.5px; border-collapse:separate; border-spacing:0}
+  #trendTable th, #trendTable td{padding:7px 10px; vertical-align:middle}
+  #trendTable th:first-child, #trendTable td:first-child{width:66px}
+  #trendTable tbody td{border-bottom:1px solid #eef1f6; color:#1f2c44}
+  #trendTable tbody tr:nth-child(even) td{background:#fafbfd}
+  #trendTable .celltip{margin-top:2px}
 </style>
 </head>
 <body>
@@ -882,6 +884,10 @@
       </div>
     </div>
 
+    <!-- stock-aging value pipeline (from opname Stock All) -->
+    <div class="subttl" style="margin-top:2px"><span class="sq"></span><span class="id">재고 경과 금액 파이프라인 (재고실사 · <span class="opn8-per"></span>)</span><span class="en">Stock-aging value pipeline (Stock Opname · <span class="opn8-per"></span>)</span></div>
+    <div id="deadFlow2" class="risk-flow-wrap"></div>
+
     <div class="sectitle"><span class="acc"></span><span class="sq"></span>
       <span class="id">재고실사 월별 추이 (2026)</span><span class="en">Stock-opname monthly trend (2026)</span>
       <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)"><span class="id">월 선택</span><span class="en">Month</span>:</span>
@@ -889,10 +895,6 @@
 
     <!-- KPI number boxes (with inline formula) -->
     <div class="kpis4" id="trendKpis" style="margin-bottom:14px"></div>
-
-    <!-- stock-aging value pipeline (from Aug opname Stock All) -->
-    <div class="subttl" style="margin-top:2px"><span class="sq"></span><span class="id">재고 경과 금액 파이프라인 (재고실사 · <span class="opn8-per"></span>)</span><span class="en">Stock-aging value pipeline (Stock Opname · <span class="opn8-per"></span>)</span></div>
-    <div id="deadFlow2" class="risk-flow-wrap"></div>
 
     <!-- comparison table (hover a cell for its note) -->
     <div class="subttl"><span class="sq"></span><span class="id">월별 비교표</span><span class="en">Month-by-month comparison</span>
@@ -986,6 +988,9 @@ const CT = k => (isEN()?CT_EN:CT_KO)[k]||k;
 const nf = n => Math.round(n).toLocaleString('en-US');
 /* full amounts everywhere — no M/K/B abbreviation, show the exact figure */
 function big(n){ return 'Rp '+nf(n); }
+/* compact form (M/B) — used only in the month-by-month comparison table */
+function bigC(n){ const a=Math.abs(n); if(a>=1e9) return 'Rp '+(n/1e9).toFixed(2)+'B'; if(a>=1e6) return 'Rp '+(n/1e6).toFixed(1)+'M'; return 'Rp '+nf(n); }
+function usdSubC(n){ if(!n) return ''; const u=Math.abs(n)/RATE; const s=u>=1e6?'USD '+(u/1e6).toFixed(2)+'M':u>=1e3?'USD '+Math.round(u/1000)+'K':'USD '+Math.round(u); return `<div class="usdsub">${s}</div>`; }
 const usd = n => 'USD '+nf(n/RATE);
 function usdBig(n){ return 'USD '+nf(n/RATE); }
 /* small USD sub-line under an IDR amount; '' for zero/dash */
@@ -1928,13 +1933,13 @@ function renderTrend2(){
   document.getElementById('trendTable').innerHTML=
     `<thead><tr><th style="text-align:left"><span class="id">지표</span><span class="en">Metric</span></th>${cols}</tr></thead><tbody>`
     + row(CT('acc'),s=>`<b>${(s.acc*100).toFixed(2)}%</b>`, (s,i)=>{ if(i<=0) return ''; const dp=(s.acc-S[i-1].acc)*100; const c=dp>=0?UPC:DNC; const sy=dp>=0?'▲ +':'▼ '; return `<span style="color:${c};font-weight:600">${sy}${dp.toFixed(2)}%p</span>`; })
-    + row(CT('book'),s=>big(s.book)+usdSub(s.book), (s,i)=>momTxt(i,'book'))
-    + row(CT('actual'),s=>big(s.actual)+usdSub(s.actual), (s,i)=>momTxt(i,'actual'))
-    + row(CT('variance'),s=>`<span style="color:var(--red)">${big(s.variance)}</span>`+usdSub(s.variance), s=>`${L?'of System':'System 대비'} ${(s.variance/s.book*100).toFixed(2)}%<br>MEP ${big(s.mep)} (${s.variance?(s.mep/s.variance*100).toFixed(0):0}%)`)
-    + row(CT('over'),s=>s.over?big(s.over)+usdSub(s.over):'—', (s,i)=>momTxt(i,'over'))
-    + row(CT('short'),s=>s.short?big(s.short)+usdSub(s.short):'—', (s,i)=>momTxt(i,'short'))
-    + row(CT('nf'),s=>s.nf?big(s.nf)+usdSub(s.nf):'—', (s,i)=>momTxt(i,'nf'))
-    + row(CT('sa'),s=>s.sa?big(s.sa)+usdSub(s.sa):'—', (s,i)=>momTxt(i,'sa'))
+    + row(CT('book'),s=>big(s.book), (s,i)=>momTxt(i,'book'))
+    + row(CT('actual'),s=>big(s.actual), (s,i)=>momTxt(i,'actual'))
+    + row(CT('variance'),s=>`<span style="color:var(--red)">${big(s.variance)}</span>`, s=>`${L?'of System':'System 대비'} ${(s.variance/s.book*100).toFixed(2)}% · MEP ${big(s.mep)}`)
+    + row(CT('over'),s=>s.over?big(s.over):'—', (s,i)=>momTxt(i,'over'))
+    + row(CT('short'),s=>s.short?big(s.short):'—', (s,i)=>momTxt(i,'short'))
+    + row(CT('nf'),s=>s.nf?big(s.nf):'—', (s,i)=>momTxt(i,'nf'))
+    + row(CT('sa'),s=>s.sa?big(s.sa):'—', (s,i)=>momTxt(i,'sa'))
     + `</tbody>`;
 
   if(typeof Chart==='undefined') return;  // chart lib not loaded — table still shows
