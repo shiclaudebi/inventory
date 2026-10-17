@@ -1035,8 +1035,8 @@
     <div class="scroll" style="max-height:480px;overflow-y:auto;overflow-x:hidden">
       <table class="navyhead allag" style="font-size:11px;width:100%;table-layout:fixed">
         <colgroup>
-          <col style="width:2.4%"><col style="width:8.4%"><col style="width:5.4%"><col style="width:5.6%">
-          <col style="width:3.4%"><col style="width:8.4%"><col style="width:20.4%">
+          <col style="width:3.4%"><col style="width:8.2%"><col style="width:5.2%"><col style="width:5.4%">
+          <col style="width:3.4%"><col style="width:8.2%"><col style="width:19.6%">
           <col style="width:3.8%"><col style="width:5.2%"><col style="width:5.2%"><col style="width:5.0%">
           <col style="width:9.0%"><col style="width:9.0%"><col style="width:8.8%">
         </colgroup>
@@ -2121,7 +2121,7 @@ function renderAllAging(){
   const dcol=v=>v<0?'#dd4b39':v>0?'#2f6bcc':'#8896ad';
   const dnum=v=>`<span style="color:${dcol(v)};font-weight:600">${v>0?'+':''}${nf(v)}</span>`;
   body.innerHTML=arr.map(it=>`<tr>
-      <td class="muted" style="text-align:center">${it.no}</td>
+      <td class="muted" style="text-align:center;white-space:nowrap;overflow-wrap:normal">${it.no}</td>
       <td>${it.dp||'—'}</td>
       <td>${it.lc||'—'}</td>
       <td>${it.ps||'—'}</td>
